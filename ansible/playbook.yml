@@ -1,0 +1,29 @@
+- hosts: localhost
+  tasks:
+    - name: Install Docker
+      ansible.builtin.yum:
+        name: docker
+        state: present
+
+    - name: Start and enable Docker service
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install Kubernetes
+      ansible.builtin.yum:
+        name: kubeadm
+        state: present
+
+    - name: Initialize Kubernetes cluster
+      ansible.builtin.command:
+        cmd: kubeadm init --pod-network-cidr=10.244.0.0/16
+
+    - name: Set up kubeconfig for root
+      ansible.builtin.command:
+        cmd: mkdir -p /root/.kube && cp /etc/kubernetes/admin.conf /root/.kube/config && chown $(id -u):$(id -g) /root/.kube/config
+
+    - name: Install Flannel CNI
+      ansible.builtin.command:
+        cmd: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
